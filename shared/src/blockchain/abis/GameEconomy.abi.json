@@ -1,0 +1,162 @@
+[
+  {
+    "type": "event",
+    "name": "WeaponPurchased",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32", "indexed": true },
+      { "name": "weaponId", "type": "uint256", "indexed": true },
+      { "name": "price", "type": "uint256", "indexed": false },
+      { "name": "purchasedAt", "type": "uint256", "indexed": false }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "WeaponUpgraded",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32", "indexed": true },
+      { "name": "weaponId", "type": "uint256", "indexed": true },
+      { "name": "newLevel", "type": "uint8", "indexed": false },
+      { "name": "cost", "type": "uint256", "indexed": false }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ItemListed",
+    "inputs": [
+      { "name": "itemId", "type": "uint256", "indexed": true },
+      { "name": "itemType", "type": "uint8", "indexed": false },
+      { "name": "price", "type": "uint256", "indexed": false },
+      { "name": "seller", "type": "address", "indexed": true }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "SpendingLimitUpdated",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32", "indexed": true },
+      { "name": "dailyLimit", "type": "uint256", "indexed": false },
+      { "name": "perTxLimit", "type": "uint256", "indexed": false }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "function",
+    "name": "buyWeapon",
+    "stateMutability": "payable",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32" },
+      { "name": "weaponId", "type": "uint256" }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "upgradeWeapon",
+    "stateMutability": "payable",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32" },
+      { "name": "weaponId", "type": "uint256" },
+      { "name": "targetLevel", "type": "uint8" }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "getWeaponPrice",
+    "stateMutability": "view",
+    "inputs": [
+      { "name": "weaponId", "type": "uint256" }
+    ],
+    "outputs": [
+      { "name": "price", "type": "uint256" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "getUpgradeCost",
+    "stateMutability": "view",
+    "inputs": [
+      { "name": "weaponId", "type": "uint256" },
+      { "name": "targetLevel", "type": "uint8" }
+    ],
+    "outputs": [
+      { "name": "cost", "type": "uint256" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "getAgentWeapons",
+    "stateMutability": "view",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32" }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple[]",
+        "components": [
+          { "name": "weaponId", "type": "uint256" },
+          { "name": "level", "type": "uint8" },
+          { "name": "acquiredAt", "type": "uint256" }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "setSpendingLimits",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32" },
+      { "name": "dailyLimit", "type": "uint256" },
+      { "name": "perTxLimit", "type": "uint256" }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "getSpendingLimits",
+    "stateMutability": "view",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32" }
+    ],
+    "outputs": [
+      { "name": "dailyLimit", "type": "uint256" },
+      { "name": "perTxLimit", "type": "uint256" },
+      { "name": "spentToday", "type": "uint256" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "isContractWhitelisted",
+    "stateMutability": "view",
+    "inputs": [
+      { "name": "contractAddress", "type": "address" }
+    ],
+    "outputs": [
+      { "name": "", "type": "bool" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "whitelistContract",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "contractAddress", "type": "address" },
+      { "name": "whitelisted", "type": "bool" }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "owner",
+    "stateMutability": "view",
+    "inputs": [],
+    "outputs": [
+      { "name": "", "type": "address" }
+    ]
+  }
+]

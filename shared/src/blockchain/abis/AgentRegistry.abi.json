@@ -1,0 +1,158 @@
+[
+  {
+    "type": "event",
+    "name": "AgentRegistered",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32", "indexed": true },
+      { "name": "owner", "type": "address", "indexed": true },
+      { "name": "hotWallet", "type": "address", "indexed": false },
+      { "name": "modelHash", "type": "bytes32", "indexed": false },
+      { "name": "registeredAt", "type": "uint256", "indexed": false }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "AgentUpdated",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32", "indexed": true },
+      { "name": "modelHash", "type": "bytes32", "indexed": false },
+      { "name": "updatedAt", "type": "uint256", "indexed": false }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "AgentStatusChanged",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32", "indexed": true },
+      { "name": "status", "type": "uint8", "indexed": false },
+      { "name": "changedAt", "type": "uint256", "indexed": false }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "HotWalletUpdated",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32", "indexed": true },
+      { "name": "oldWallet", "type": "address", "indexed": false },
+      { "name": "newWallet", "type": "address", "indexed": false }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "function",
+    "name": "registerAgent",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32" },
+      { "name": "hotWallet", "type": "address" },
+      { "name": "modelHash", "type": "bytes32" }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "updateModelHash",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32" },
+      { "name": "modelHash", "type": "bytes32" }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "updateHotWallet",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32" },
+      { "name": "newHotWallet", "type": "address" }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "setAgentStatus",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32" },
+      { "name": "status", "type": "uint8" }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "getAgent",
+    "stateMutability": "view",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32" }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "components": [
+          { "name": "owner", "type": "address" },
+          { "name": "hotWallet", "type": "address" },
+          { "name": "modelHash", "type": "bytes32" },
+          { "name": "status", "type": "uint8" },
+          { "name": "registeredAt", "type": "uint256" },
+          { "name": "updatedAt", "type": "uint256" }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "isRegistered",
+    "stateMutability": "view",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32" }
+    ],
+    "outputs": [
+      { "name": "", "type": "bool" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "getOwner",
+    "stateMutability": "view",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32" }
+    ],
+    "outputs": [
+      { "name": "", "type": "address" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "getHotWallet",
+    "stateMutability": "view",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32" }
+    ],
+    "outputs": [
+      { "name": "", "type": "address" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "owner",
+    "stateMutability": "view",
+    "inputs": [],
+    "outputs": [
+      { "name": "", "type": "address" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "transferOwnership",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "newOwner", "type": "address" }
+    ],
+    "outputs": []
+  }
+]

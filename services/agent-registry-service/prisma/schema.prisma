@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Agent {
+  agentId          String      @id @default(uuid()) @map("agent_id")
+  ownerWallet      String      @map("owner_wallet")
+  hotWalletAddress String?     @map("hot_wallet_address")
+  modelHash        String?     @map("model_hash")
+  eloRating        Int         @default(1000) @map("elo_rating")
+  reputationScore  Int         @default(100) @map("reputation_score")
+  status           AgentStatus @default(ACTIVE)
+  gamesPlayed      Int         @default(0) @map("games_played")
+  wins             Int         @default(0)
+  losses           Int         @default(0)
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+
+  eloHistory       EloHistory[]
+
+  @@index([ownerWallet])
+  @@index([eloRating])
+  @@index([status])
+  @@map("agents")
+}
+
+model EloHistory {
+  id        String   @id @default(uuid())
+  agentId   String   @map("agent_id")
+  oldRating Int      @map("old_rating")
+  newRating Int      @map("new_rating")
+  change    Int
+  reason    String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  agent Agent @relation(fields: [agentId], references: [agentId], onDelete: Cascade)
+
+  @@index([agentId])
+  @@index([createdAt])
+  @@map("elo_history")
+}
+
+enum AgentStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  TRAINING
+}

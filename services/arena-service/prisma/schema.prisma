@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Match {
+  matchId      String      @id @default(uuid()) @map("match_id")
+  agent1Id     String      @map("agent1_id")
+  agent2Id     String      @map("agent2_id")
+  status       MatchStatus @default(PENDING)
+  winnerId     String?     @map("winner_id")
+  eloChange1   Int         @default(0) @map("elo_change1")
+  eloChange2   Int         @default(0) @map("elo_change2")
+  mapId        String?     @map("map_id")
+  gameMode     String      @default("deathmatch") @map("game_mode")
+  startedAt    DateTime?   @map("started_at")
+  endedAt      DateTime?   @map("ended_at")
+  resultHash   String?     @map("result_hash")
+  tournamentId String?     @map("tournament_id")
+  metadata     Json?
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+
+  @@index([agent1Id])
+  @@index([agent2Id])
+  @@index([status])
+  @@index([tournamentId])
+  @@map("matches")
+}
+
+enum MatchStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}

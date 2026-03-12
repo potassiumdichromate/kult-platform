@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Prisma
+**/prisma/migrations/
+
+# Hardhat
+contracts/artifacts/
+contracts/cache/
+contracts/typechain-types/
+contracts/deployments/*.json
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Test coverage
+coverage/
+
+# Docker volumes
+.docker/
+
+# Keys (never commit)
+*.pem
+*.key
+keystore/

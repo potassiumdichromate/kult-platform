@@ -1,0 +1,174 @@
+[
+  {
+    "type": "event",
+    "name": "Deposited",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32", "indexed": true },
+      { "name": "from", "type": "address", "indexed": true },
+      { "name": "amount", "type": "uint256", "indexed": false },
+      { "name": "token", "type": "address", "indexed": false },
+      { "name": "depositedAt", "type": "uint256", "indexed": false }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Withdrawn",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32", "indexed": true },
+      { "name": "to", "type": "address", "indexed": true },
+      { "name": "amount", "type": "uint256", "indexed": false },
+      { "name": "token", "type": "address", "indexed": false },
+      { "name": "withdrawnAt", "type": "uint256", "indexed": false }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "PrizeDistributed",
+    "inputs": [
+      { "name": "tournamentId", "type": "bytes32", "indexed": true },
+      { "name": "agentId", "type": "bytes32", "indexed": true },
+      { "name": "amount", "type": "uint256", "indexed": false },
+      { "name": "token", "type": "address", "indexed": false }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ProtocolFeeCollected",
+    "inputs": [
+      { "name": "amount", "type": "uint256", "indexed": false },
+      { "name": "token", "type": "address", "indexed": false }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "function",
+    "name": "deposit",
+    "stateMutability": "payable",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32" }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "depositERC20",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32" },
+      { "name": "token", "type": "address" },
+      { "name": "amount", "type": "uint256" }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "withdraw",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32" },
+      { "name": "amount", "type": "uint256" }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "withdrawERC20",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32" },
+      { "name": "token", "type": "address" },
+      { "name": "amount", "type": "uint256" }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "distributePrize",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "tournamentId", "type": "bytes32" },
+      { "name": "winners", "type": "bytes32[]" },
+      { "name": "amounts", "type": "uint256[]" },
+      { "name": "token", "type": "address" }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "getBalance",
+    "stateMutability": "view",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32" }
+    ],
+    "outputs": [
+      { "name": "nativeBalance", "type": "uint256" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "getERC20Balance",
+    "stateMutability": "view",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32" },
+      { "name": "token", "type": "address" }
+    ],
+    "outputs": [
+      { "name": "balance", "type": "uint256" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "getTotalDeposited",
+    "stateMutability": "view",
+    "inputs": [
+      { "name": "agentId", "type": "bytes32" }
+    ],
+    "outputs": [
+      { "name": "", "type": "uint256" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "setProtocolFee",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "feeBps", "type": "uint16" }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "protocolFee",
+    "stateMutability": "view",
+    "inputs": [],
+    "outputs": [
+      { "name": "", "type": "uint16" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "owner",
+    "stateMutability": "view",
+    "inputs": [],
+    "outputs": [
+      { "name": "", "type": "address" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "pause",
+    "stateMutability": "nonpayable",
+    "inputs": [],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "unpause",
+    "stateMutability": "nonpayable",
+    "inputs": [],
+    "outputs": []
+  }
+]

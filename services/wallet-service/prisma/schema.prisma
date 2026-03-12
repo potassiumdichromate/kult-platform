@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Wallet {
+  walletId         String   @id @default(uuid()) @map("wallet_id")
+  agentId          String   @unique @map("agent_id")
+  address          String   @unique
+  encryptedPrivKey String   @map("encrypted_priv_key")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  txId        String   @id @default(uuid()) @map("tx_id")
+  walletId    String   @map("wallet_id")
+  txHash      String?  @map("tx_hash")
+  type        String
+  amount      String
+  toAddress   String?  @map("to_address")
+  fromAddress String?  @map("from_address")
+  status      String   @default("PENDING")
+  blockNumber BigInt?  @map("block_number")
+  gasUsed     String?  @map("gas_used")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([walletId])
+  @@index([txHash])
+  @@map("wallet_transactions")
+}

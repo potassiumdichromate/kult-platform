@@ -1,0 +1,496 @@
+# =============================================================================
+# KULT Platform — Render Blueprint
+# https://render.com/docs/blueprint-spec
+#
+# Deploy: push to GitHub → connect repo in Render → "New Blueprint Instance"
+#
+# COST ESTIMATE (Starter plan, always-on):
+#   11 web services × $7/mo  =  $77/mo
+#   1  PostgreSQL (Starter)  =  $7/mo
+#   1  Redis (Starter)       =  $10/mo
+#   TOTAL                    ≈  $94/mo
+#
+# MongoDB (telemetry) is NOT managed by Render.
+#   → Sign up at https://cloud.mongodb.com (free M0 cluster available)
+#   → Set MONGODB_URI manually in the telemetry-service env vars below
+#
+# INTER-SERVICE URLs (sync: false):
+#   After first deploy, copy each service's public URL from the Render dashboard
+#   and fill in the env vars marked "SET AFTER DEPLOY".
+# =============================================================================
+
+# ─── Shared secrets (referenced by all services) ──────────────────────────────
+envVarGroups:
+  - name: kult-shared-auth
+    envVars:
+      # Render generates a secure random value on first deploy
+      - key: JWT_SECRET
+        generateValue: true
+      - key: INTERNAL_API_SECRET
+        generateValue: true
+
+  - name: kult-blockchain
+    envVars:
+      - key: BLOCKCHAIN_RPC_URL
+        value: https://evmrpc.0g.ai
+      - key: CHAIN_ID
+        value: "16600"
+      # Contract addresses — fill in after deploying contracts to 0G Mainnet
+      - key: AGENT_REGISTRY_CONTRACT
+        value: "0x0000000000000000000000000000000000000000"
+      - key: GAME_ECONOMY_CONTRACT
+        value: "0x0000000000000000000000000000000000000000"
+      - key: TREASURY_CONTRACT
+        value: "0x0000000000000000000000000000000000000000"
+      - key: SETTLEMENT_CONTRACT
+        value: "0x0000000000000000000000000000000000000000"
+
+# ─── Databases ────────────────────────────────────────────────────────────────
+databases:
+  - name: kult-postgres
+    databaseName: kult_platform
+    user: kult_user
+    plan: starter
+    postgresMajorVersion: "16"
+    region: oregon
+    # All 8 PostgreSQL services share this one instance.
+    # Each service uses a different Prisma schema (tables are namespaced via @@map).
+    # This keeps costs at $7/mo instead of $56/mo.
+
+# ─── Services ─────────────────────────────────────────────────────────────────
+services:
+
+  # ── Redis (shared by all services) ─────────────────────────────────────────
+  - type: redis
+    name: kult-redis
+    plan: starter
+    region: oregon
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []   # private — accessible only from Render services
+
+  # ── Gateway Service (the only public-facing service) ───────────────────────
+  - type: web
+    name: kult-gateway
+    runtime: docker
+    dockerfilePath: services/gateway-service/Dockerfile
+    dockerContext: .
+    plan: starter
+    region: oregon
+    healthCheckPath: /health
+    envVarGroups:
+      - kult-shared-auth
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: kult-redis
+          property: connectionString
+      # ── Inter-service URLs (SET AFTER DEPLOY) ──────────────────────────────
+      - key: AGENT_REGISTRY_SERVICE_URL
+        sync: false
+      - key: MODEL_REGISTRY_SERVICE_URL
+        sync: false
+      - key: AVATAR_AI_SERVICE_URL
+        sync: false
+      - key: ARENA_SERVICE_URL
+        sync: false
+      - key: RANKING_SERVICE_URL
+        sync: false
+      - key: TOURNAMENT_SERVICE_URL
+        sync: false
+      - key: TELEMETRY_SERVICE_URL
+        sync: false
+      - key: WALLET_SERVICE_URL
+        sync: false
+      - key: AI_TRANSACTION_SERVICE_URL
+        sync: false
+      - key: SETTLEMENT_SERVICE_URL
+        sync: false
+
+  # ── Agent Registry Service ─────────────────────────────────────────────────
+  - type: web
+    name: kult-agent-registry
+    runtime: docker
+    dockerfilePath: services/agent-registry-service/Dockerfile
+    dockerContext: .
+    plan: starter
+    region: oregon
+    healthCheckPath: /health
+    envVarGroups:
+      - kult-shared-auth
+      - kult-blockchain
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: DATABASE_URL
+        fromDatabase:
+          name: kult-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: kult-redis
+          property: connectionString
+      # SET AFTER DEPLOY
+      - key: WALLET_SERVICE_URL
+        sync: false
+
+  # ── Model Registry Service ────────────────────────────────────────────────
+  - type: web
+    name: kult-model-registry
+    runtime: docker
+    dockerfilePath: services/model-registry-service/Dockerfile
+    dockerContext: .
+    plan: starter
+    region: oregon
+    healthCheckPath: /health
+    envVarGroups:
+      - kult-shared-auth
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: DATABASE_URL
+        fromDatabase:
+          name: kult-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: kult-redis
+          property: connectionString
+      # 0G Decentralized Storage
+      - key: ZERОГ_STORAGE_ENDPOINT
+        value: https://rpc.0g.ai
+      - key: ZERОГ_STORAGE_GATEWAY
+        value: https://indexer.0g.ai
+      # SET AFTER DEPLOY
+      - key: AGENT_REGISTRY_SERVICE_URL
+        sync: false
+
+  # ── Avatar AI Service ──────────────────────────────────────────────────────
+  # NOTE: Uses node:20-slim (Debian) image — larger than alpine but required for TF.js
+  - type: web
+    name: kult-avatar-ai
+    runtime: docker
+    dockerfilePath: services/avatar-ai-service/Dockerfile
+    dockerContext: .
+    plan: standard           # TF.js needs more RAM — use Standard (2GB) minimum
+    region: oregon
+    healthCheckPath: /health
+    envVarGroups:
+      - kult-shared-auth
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: kult-redis
+          property: connectionString
+      - key: TRAINING_QUEUE_NAME
+        value: avatar-training
+      - key: TRAINING_CONCURRENCY
+        value: "2"
+      - key: TRAINING_POLL_INTERVAL_MS
+        value: "5000"
+      - key: TRAINING_MAX_POLL_ATTEMPTS
+        value: "120"
+      - key: BEHAVIOR_BUFFER_FLUSH_SIZE
+        value: "50"
+      - key: BEHAVIOR_BUFFER_TTL_SECONDS
+        value: "300"
+      # SET AFTER DEPLOY
+      - key: AI_WARZONE_SERVICE_URL
+        sync: false
+      - key: AI_WARZONE_API_KEY
+        sync: false
+      - key: MODEL_REGISTRY_SERVICE_URL
+        sync: false
+
+  # ── Arena Service ──────────────────────────────────────────────────────────
+  - type: web
+    name: kult-arena
+    runtime: docker
+    dockerfilePath: services/arena-service/Dockerfile
+    dockerContext: .
+    plan: starter
+    region: oregon
+    healthCheckPath: /health
+    envVarGroups:
+      - kult-shared-auth
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: DATABASE_URL
+        fromDatabase:
+          name: kult-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: kult-redis
+          property: connectionString
+      - key: MATCHMAKING_INTERVAL_MS
+        value: "5000"
+      - key: MATCHMAKING_ELO_RANGE_INITIAL
+        value: "200"
+      - key: MATCHMAKING_ELO_RANGE_EXPAND_PER_30S
+        value: "50"
+      - key: MATCHMAKING_QUEUE_TTL_SECONDS
+        value: "300"
+      - key: MATCH_TIMEOUT_MINUTES
+        value: "30"
+      # SET AFTER DEPLOY
+      - key: AGENT_REGISTRY_SERVICE_URL
+        sync: false
+      - key: AVATAR_AI_SERVICE_URL
+        sync: false
+      - key: RANKING_SERVICE_URL
+        sync: false
+      - key: SETTLEMENT_SERVICE_URL
+        sync: false
+
+  # ── Ranking Service ────────────────────────────────────────────────────────
+  - type: web
+    name: kult-ranking
+    runtime: docker
+    dockerfilePath: services/ranking-service/Dockerfile
+    dockerContext: .
+    plan: starter
+    region: oregon
+    healthCheckPath: /health
+    envVarGroups:
+      - kult-shared-auth
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: DATABASE_URL
+        fromDatabase:
+          name: kult-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: kult-redis
+          property: connectionString
+      - key: ELO_K_FACTOR_DEFAULT
+        value: "32"
+      - key: ELO_K_FACTOR_ESTABLISHED
+        value: "16"
+      - key: ELO_K_FACTOR_MASTER
+        value: "12"
+      - key: ELO_FLOOR
+        value: "100"
+      - key: ELO_PROVISIONAL_GAMES
+        value: "30"
+      - key: LEADERBOARD_CACHE_TTL_SECONDS
+        value: "30"
+      # SET AFTER DEPLOY
+      - key: AGENT_REGISTRY_SERVICE_URL
+        sync: false
+
+  # ── Tournament Service ─────────────────────────────────────────────────────
+  - type: web
+    name: kult-tournament
+    runtime: docker
+    dockerfilePath: services/tournament-service/Dockerfile
+    dockerContext: .
+    plan: starter
+    region: oregon
+    healthCheckPath: /health
+    envVarGroups:
+      - kult-shared-auth
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: DATABASE_URL
+        fromDatabase:
+          name: kult-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: kult-redis
+          property: connectionString
+      - key: MAX_TOURNAMENT_PARTICIPANTS
+        value: "128"
+      - key: MIN_TOURNAMENT_PARTICIPANTS
+        value: "4"
+      - key: PRIZE_PAYOUT_1ST_PCT
+        value: "50"
+      - key: PRIZE_PAYOUT_2ND_PCT
+        value: "25"
+      - key: PRIZE_PAYOUT_3RD_PCT
+        value: "15"
+      - key: PRIZE_PAYOUT_4TH_PCT
+        value: "10"
+      # SET AFTER DEPLOY
+      - key: ARENA_SERVICE_URL
+        sync: false
+      - key: SETTLEMENT_SERVICE_URL
+        sync: false
+      - key: WALLET_SERVICE_URL
+        sync: false
+
+  # ── Telemetry Service (MongoDB) ────────────────────────────────────────────
+  - type: web
+    name: kult-telemetry
+    runtime: docker
+    dockerfilePath: services/telemetry-service/Dockerfile
+    dockerContext: .
+    plan: starter
+    region: oregon
+    healthCheckPath: /health
+    envVarGroups:
+      - kult-shared-auth
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: kult-redis
+          property: connectionString
+      - key: MAX_EVENTS_PER_BATCH
+        value: "100"
+      - key: EVENT_TTL_DAYS
+        value: "90"
+      # ⚠ MongoDB Atlas — SET MANUALLY (Render has no managed MongoDB)
+      # 1. Go to https://cloud.mongodb.com
+      # 2. Create a free M0 cluster
+      # 3. Get your connection string (mongodb+srv://...)
+      # 4. Paste it here in the Render dashboard
+      - key: MONGODB_URI
+        sync: false
+
+  # ── Wallet Service ─────────────────────────────────────────────────────────
+  - type: web
+    name: kult-wallet
+    runtime: docker
+    dockerfilePath: services/wallet-service/Dockerfile
+    dockerContext: .
+    plan: starter
+    region: oregon
+    healthCheckPath: /health
+    envVarGroups:
+      - kult-shared-auth
+      - kult-blockchain
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: DATABASE_URL
+        fromDatabase:
+          name: kult-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: kult-redis
+          property: connectionString
+      # ⚠ CRITICAL SECURITY: Set a strong 32+ char random string
+      # Generate with: openssl rand -hex 32
+      - key: ENCRYPTION_KEY
+        generateValue: true
+
+  # ── AI Transaction Service (Policy Engine) ────────────────────────────────
+  - type: web
+    name: kult-ai-transaction
+    runtime: docker
+    dockerfilePath: services/ai-transaction-service/Dockerfile
+    dockerContext: .
+    plan: starter
+    region: oregon
+    healthCheckPath: /health
+    envVarGroups:
+      - kult-shared-auth
+      - kult-blockchain
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: DATABASE_URL
+        fromDatabase:
+          name: kult-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: kult-redis
+          property: connectionString
+      - key: TX_QUEUE_NAME
+        value: ai-transactions
+      - key: TX_QUEUE_CONCURRENCY
+        value: "5"
+      - key: TX_CONFIRMATION_BLOCKS
+        value: "2"
+      - key: TX_POLL_INTERVAL_MS
+        value: "3000"
+      - key: TX_MAX_POLL_ATTEMPTS
+        value: "60"
+      - key: DEFAULT_DAILY_LIMIT_ETH
+        value: "0.1"
+      - key: DEFAULT_PER_TX_LIMIT_ETH
+        value: "0.01"
+      - key: GAS_BUFFER_ETH
+        value: "0.002"
+      # SET AFTER DEPLOY
+      - key: WALLET_SERVICE_URL
+        sync: false
+
+  # ── Settlement Service ─────────────────────────────────────────────────────
+  - type: web
+    name: kult-settlement
+    runtime: docker
+    dockerfilePath: services/settlement-service/Dockerfile
+    dockerContext: .
+    plan: starter
+    region: oregon
+    healthCheckPath: /health
+    envVarGroups:
+      - kult-shared-auth
+      - kult-blockchain
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: DATABASE_URL
+        fromDatabase:
+          name: kult-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: kult-redis
+          property: connectionString
+      # ⚠ SETTLER_PRIVATE_KEY — the on-chain settlement signer
+      # This key submits settlement hashes to the Settlement.sol contract.
+      # Set this in Render dashboard, NEVER commit to git.
+      - key: SETTLER_PRIVATE_KEY
+        sync: false
+      # SET AFTER DEPLOY
+      - key: ARENA_SERVICE_URL
+        sync: false
+      - key: TOURNAMENT_SERVICE_URL
+        sync: false

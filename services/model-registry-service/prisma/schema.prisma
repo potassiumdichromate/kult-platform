@@ -1,0 +1,26 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Model {
+  modelId             String   @id @default(uuid()) @map("model_id")
+  agentId             String   @map("agent_id")
+  storageHash         String   @map("storage_hash")
+  version             Int      @default(1)
+  trainingDatasetSize Int      @default(0) @map("training_dataset_size")
+  accuracy            Float    @default(0.0)
+  modelSize           BigInt   @default(0) @map("model_size")
+  framework           String   @default("tensorflow")
+  isActive            Boolean  @default(true) @map("is_active")
+  metadata            Json?
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  @@index([agentId])
+  @@index([storageHash])
+  @@map("models")
+}

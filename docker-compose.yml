@@ -1,0 +1,275 @@
+version: "3.9"
+
+# =============================================================================
+# KULT PLATFORM — Docker Compose
+# =============================================================================
+
+x-service-defaults: &service-defaults
+  restart: unless-stopped
+  networks:
+    - kult-network
+  env_file:
+    - .env
+
+x-healthcheck-defaults: &healthcheck-defaults
+  interval: 10s
+  timeout: 5s
+  retries: 5
+  start_period: 30s
+
+services:
+  # ---------------------------------------------------------------------------
+  # INFRASTRUCTURE
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: kult-postgres
+    <<: *service-defaults
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-kult_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kult_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-kult_platform}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kult_user} -d ${POSTGRES_DB:-kult_platform}"]
+      <<: *healthcheck-defaults
+
+  mongodb:
+    image: mongo:7-jammy
+    container_name: kult-mongodb
+    <<: *service-defaults
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-kult_user}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-kult_pass}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE:-kult_platform}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      <<: *healthcheck-defaults
+
+  redis:
+    image: redis:7-alpine
+    container_name: kult-redis
+    <<: *service-defaults
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-kult_redis_pass}", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-kult_redis_pass}", "ping"]
+      <<: *healthcheck-defaults
+
+  # ---------------------------------------------------------------------------
+  # APPLICATION SERVICES
+  # ---------------------------------------------------------------------------
+  gateway-service:
+    build:
+      context: .
+      dockerfile: services/gateway-service/Dockerfile
+    container_name: kult-gateway
+    <<: *service-defaults
+    ports:
+      - "${GATEWAY_PORT:-3000}:${GATEWAY_PORT:-3000}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      PORT: ${GATEWAY_PORT:-3000}
+
+  agent-registry-service:
+    build:
+      context: .
+      dockerfile: services/agent-registry-service/Dockerfile
+    container_name: kult-agent-registry
+    <<: *service-defaults
+    ports:
+      - "${AGENT_REGISTRY_PORT:-3001}:${AGENT_REGISTRY_PORT:-3001}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      PORT: ${AGENT_REGISTRY_PORT:-3001}
+
+  model-registry-service:
+    build:
+      context: .
+      dockerfile: services/model-registry-service/Dockerfile
+    container_name: kult-model-registry
+    <<: *service-defaults
+    ports:
+      - "${MODEL_REGISTRY_PORT:-3002}:${MODEL_REGISTRY_PORT:-3002}"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      PORT: ${MODEL_REGISTRY_PORT:-3002}
+
+  avatar-ai-service:
+    build:
+      context: .
+      dockerfile: services/avatar-ai-service/Dockerfile
+    container_name: kult-avatar-ai
+    <<: *service-defaults
+    ports:
+      - "${AVATAR_AI_PORT:-3003}:${AVATAR_AI_PORT:-3003}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      PORT: ${AVATAR_AI_PORT:-3003}
+
+  arena-service:
+    build:
+      context: .
+      dockerfile: services/arena-service/Dockerfile
+    container_name: kult-arena
+    <<: *service-defaults
+    ports:
+      - "${ARENA_PORT:-3004}:${ARENA_PORT:-3004}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      agent-registry-service:
+        condition: service_started
+      ranking-service:
+        condition: service_started
+    environment:
+      PORT: ${ARENA_PORT:-3004}
+
+  ranking-service:
+    build:
+      context: .
+      dockerfile: services/ranking-service/Dockerfile
+    container_name: kult-ranking
+    <<: *service-defaults
+    ports:
+      - "${RANKING_PORT:-3005}:${RANKING_PORT:-3005}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      PORT: ${RANKING_PORT:-3005}
+
+  tournament-service:
+    build:
+      context: .
+      dockerfile: services/tournament-service/Dockerfile
+    container_name: kult-tournament
+    <<: *service-defaults
+    ports:
+      - "${TOURNAMENT_PORT:-3006}:${TOURNAMENT_PORT:-3006}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      arena-service:
+        condition: service_started
+    environment:
+      PORT: ${TOURNAMENT_PORT:-3006}
+
+  telemetry-service:
+    build:
+      context: .
+      dockerfile: services/telemetry-service/Dockerfile
+    container_name: kult-telemetry
+    <<: *service-defaults
+    ports:
+      - "${TELEMETRY_PORT:-3007}:${TELEMETRY_PORT:-3007}"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      PORT: ${TELEMETRY_PORT:-3007}
+
+  wallet-service:
+    build:
+      context: .
+      dockerfile: services/wallet-service/Dockerfile
+    container_name: kult-wallet
+    <<: *service-defaults
+    ports:
+      - "${WALLET_PORT:-3008}:${WALLET_PORT:-3008}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      PORT: ${WALLET_PORT:-3008}
+
+  ai-transaction-service:
+    build:
+      context: .
+      dockerfile: services/ai-transaction-service/Dockerfile
+    container_name: kult-ai-transaction
+    <<: *service-defaults
+    ports:
+      - "${AI_TRANSACTION_PORT:-3009}:${AI_TRANSACTION_PORT:-3009}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      wallet-service:
+        condition: service_started
+    environment:
+      PORT: ${AI_TRANSACTION_PORT:-3009}
+
+  settlement-service:
+    build:
+      context: .
+      dockerfile: services/settlement-service/Dockerfile
+    container_name: kult-settlement
+    <<: *service-defaults
+    ports:
+      - "${SETTLEMENT_PORT:-3010}:${SETTLEMENT_PORT:-3010}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      wallet-service:
+        condition: service_started
+    environment:
+      PORT: ${SETTLEMENT_PORT:-3010}
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+volumes:
+  postgres-data:
+    driver: local
+  mongo-data:
+    driver: local
+  redis-data:
+    driver: local
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+networks:
+  kult-network:
+    driver: bridge
+    name: kult-network

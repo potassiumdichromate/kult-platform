@@ -1,0 +1,30 @@
+{
+  "name": "@kult/avatar-ai-service",
+  "version": "1.0.0",
+  "description": "KULT AI avatar service - behavioral cloning, TensorFlow.js training and inference",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "fastify": "^4.26.0",
+    "@fastify/jwt": "^8.0.0",
+    "@fastify/cors": "^9.0.0",
+    "axios": "^1.6.0",
+    "bullmq": "^5.4.0",
+    "ioredis": "^5.3.0",
+    "zod": "^3.22.0",
+    "winston": "^3.11.0",
+    "@tensorflow/tfjs-node": "^4.17.0",
+    "form-data": "^4.0.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "@types/node": "^20.0.0",
+    "@types/uuid": "^9.0.0",
+    "ts-node-dev": "^2.0.0"
+  }
+}

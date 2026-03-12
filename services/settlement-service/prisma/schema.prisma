@@ -1,0 +1,26 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Settlement {
+  settlementId String    @id @default(uuid()) @map("settlement_id")
+  matchId      String?   @map("match_id")
+  tournamentId String?   @map("tournament_id")
+  type         String
+  resultHash   String    @map("result_hash")
+  proof        String?
+  txHash       String?   @map("tx_hash")
+  blockNumber  BigInt?   @map("block_number")
+  status       String    @default("PENDING")
+  verifiedAt   DateTime? @map("verified_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@index([matchId])
+  @@index([tournamentId])
+  @@map("settlements")
+}

@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tournament {
+  tournamentId    String                  @id @default(uuid()) @map("tournament_id")
+  name            String
+  description     String?
+  status          TournamentStatus        @default(REGISTRATION)
+  prizePool       String                  @map("prize_pool")
+  entryFee        String                  @default("0") @map("entry_fee")
+  maxParticipants Int                     @map("max_participants")
+  startTime       DateTime                @map("start_time")
+  endTime         DateTime?               @map("end_time")
+  winnerId        String?                 @map("winner_id")
+  settlementHash  String?                 @map("settlement_hash")
+  createdAt       DateTime                @default(now()) @map("created_at")
+  participants    TournamentParticipant[]
+
+  @@map("tournaments")
+}
+
+enum TournamentStatus {
+  REGISTRATION
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model TournamentParticipant {
+  id           String     @id @default(uuid())
+  tournamentId String     @map("tournament_id")
+  agentId      String     @map("agent_id")
+  seed         Int?
+  eliminated   Boolean    @default(false)
+  placement    Int?
+  joinedAt     DateTime   @default(now()) @map("joined_at")
+  tournament   Tournament @relation(fields: [tournamentId], references: [tournamentId])
+
+  @@unique([tournamentId, agentId])
+  @@index([tournamentId])
+  @@map("tournament_participants")
+}
+
+model TournamentMatch {
+  id           String  @id @default(uuid())
+  tournamentId String  @map("tournament_id")
+  matchId      String  @map("match_id")
+  round        Int
+  position     Int
+  winnerId     String? @map("winner_id")
+
+  @@index([tournamentId])
+  @@map("tournament_matches")
+}

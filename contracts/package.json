@@ -1,0 +1,27 @@
+{
+  "name": "@kult/contracts",
+  "version": "1.0.0",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:local": "hardhat run scripts/deploy.ts --network localhost",
+    "deploy:mainnet": "hardhat run scripts/deploy.ts --network zerog",
+    "verify": "hardhat verify"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.0",
+    "ethers": "^6.0.0"
+  },
+  "devDependencies": {
+    "hardhat": "^2.19.0",
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@nomicfoundation/hardhat-ethers": "^3.0.0",
+    "@typechain/hardhat": "^9.0.0",
+    "typescript": "^5.3.0",
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.0.0",
+    "chai": "^4.0.0",
+    "@types/chai": "^4.0.0",
+    "dotenv": "^16.0.0"
+  }
+}

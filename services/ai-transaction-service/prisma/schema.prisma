@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model AITransaction {
+  txId           String   @id @default(uuid()) @map("tx_id")
+  agentId        String   @map("agent_id")
+  type           String
+  amount         String
+  targetContract String   @map("target_contract")
+  calldata       String
+  status         String   @default("PENDING")
+  txHash         String?  @map("tx_hash")
+  policyApproved Boolean  @default(false) @map("policy_approved")
+  policyReason   String?  @map("policy_reason")
+  gasEstimate    String?  @map("gas_estimate")
+  blockConfirmed Int?     @map("block_confirmed")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([agentId])
+  @@index([status])
+  @@map("ai_transactions")
+}
+
+model SpendingLimit {
+  limitId    String   @id @default(uuid()) @map("limit_id")
+  agentId    String   @unique @map("agent_id")
+  dailyLimit String   @default("0.1") @map("daily_limit")
+  perTxLimit String   @default("0.01") @map("per_tx_limit")
+  spentToday String   @default("0") @map("spent_today")
+  resetAt    DateTime @map("reset_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("spending_limits")
+}

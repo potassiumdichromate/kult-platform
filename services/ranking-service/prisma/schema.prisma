@@ -1,0 +1,22 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model RankHistory {
+  id        String   @id @default(uuid())
+  agentId   String   @map("agent_id")
+  oldElo    Int      @map("old_elo")
+  newElo    Int      @map("new_elo")
+  change    Int
+  matchId   String   @map("match_id")
+  reason    String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([agentId])
+  @@map("rank_history")
+}

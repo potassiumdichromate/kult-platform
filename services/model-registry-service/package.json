@@ -1,0 +1,32 @@
+{
+  "name": "@kult/model-registry-service",
+  "version": "1.0.0",
+  "description": "KULT AI model registry - stores and manages AI model versions on 0G decentralized storage",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:studio": "prisma studio"
+  },
+  "dependencies": {
+    "fastify": "^4.26.0",
+    "@fastify/jwt": "^8.0.0",
+    "@fastify/cors": "^9.0.0",
+    "@prisma/client": "^5.10.0",
+    "axios": "^1.6.0",
+    "zod": "^3.22.0",
+    "winston": "^3.11.0",
+    "bullmq": "^5.4.0",
+    "ioredis": "^5.3.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "@types/node": "^20.0.0",
+    "ts-node-dev": "^2.0.0",
+    "prisma": "^5.10.0"
+  }
+}
