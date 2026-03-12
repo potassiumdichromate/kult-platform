@@ -8,10 +8,12 @@ dist/
 build/
 *.tsbuildinfo
 
-# Environment files
+# Environment files — match .env in ALL subdirectories, never commit secrets
 .env
+**/.env
 .env.local
 .env.*.local
+**/.env.local
 
 # Prisma
 **/prisma/migrations/

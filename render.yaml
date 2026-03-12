@@ -209,11 +209,10 @@ services:
         value: "50"
       - key: BEHAVIOR_BUFFER_TTL_SECONDS
         value: "300"
-      # SET AFTER DEPLOY
+      # AI Warzone (existing service — no API key required)
       - key: AI_WARZONE_SERVICE_URL
-        sync: false
-      - key: AI_WARZONE_API_KEY
-        sync: false
+        value: https://ai-warzone.onrender.com
+      # SET AFTER DEPLOY
       - key: MODEL_REGISTRY_SERVICE_URL
         sync: false
 
