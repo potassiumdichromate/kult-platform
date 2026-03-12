@@ -149,10 +149,10 @@ services:
           type: redis
           name: kult-redis
           property: connectionString
-      - key: ZERОГ_STORAGE_ENDPOINT
-        value: https://rpc.0g.ai
-      - key: ZERОГ_STORAGE_GATEWAY
-        value: https://indexer.0g.ai
+      - key: ZERO_G_STORAGE_URL
+        value: https://indexer-storage-testnet-standard.0g.ai
+      - key: ZERO_G_GATEWAY_URL
+        value: https://rpc-storage-testnet.0g.ai
       - key: AGENT_REGISTRY_SERVICE_URL
         sync: false
 
