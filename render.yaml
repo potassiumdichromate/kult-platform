@@ -4,11 +4,11 @@
 #
 # Deploy: push to GitHub → Render Dashboard → New → Blueprint → select repo
 #
-# COST ESTIMATE (Starter plan, always-on):
+# COST ESTIMATE (Free DB + Starter services):
 #   11 web services × $7/mo  =  $77/mo
-#   1  PostgreSQL (Starter)  =  $7/mo
+#   1  PostgreSQL (Free)     =  $0/mo  (90-day expiry, upgrade to Basic $7/mo for prod)
 #   1  Redis (Starter)       =  $10/mo
-#   TOTAL                    ≈  $94/mo
+#   TOTAL                    ≈  $87/mo
 # =============================================================================
 
 # ─── Env Var Groups (shared across services) ──────────────────────────────────
@@ -41,7 +41,7 @@ databases:
   - name: kult-postgres
     databaseName: kult_platform
     user: kult_user
-    plan: starter
+    plan: free
     postgresMajorVersion: "16"
     region: oregon
 
